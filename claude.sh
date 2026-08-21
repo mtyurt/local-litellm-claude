@@ -3,15 +3,15 @@
 # ABOUTME: Reads the proxy master key from .env so no secret is committed.
 
 set -euo pipefail
-cd "$(dirname "$0")"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
 
-if [ ! -f .env ]; then
+if [ ! -f "$script_dir/.env" ]; then
   echo "claude.sh: .env not found - run 'make install' first" >&2
   exit 1
 fi
 
 set -a
-. ./.env
+. "$script_dir/.env"
 set +a
 
 ANTHROPIC_AUTH_TOKEN="$LITELLM_MASTER_KEY" \
