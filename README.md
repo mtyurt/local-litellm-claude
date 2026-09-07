@@ -1,13 +1,28 @@
 # local-litellm
 
-Run a local [LiteLLM](https://github.com/BerriAI/litellm) proxy backed by your GitHub Copilot
-subscription, and point [Claude Code](https://docs.anthropic.com/en/docs/claude-code) at it.
+Run a local [LiteLLM](https://github.com/BerriAI/litellm) proxy with a ChatGPT, GitHub Copilot,
+or Anthropic provider configuration, and point [Claude Code](https://docs.anthropic.com/en/docs/claude-code) at it.
 
 ## Requirements
 
 - macOS with `python3` (3.10+)
-- An active GitHub Copilot subscription
+- A subscription or API key for the selected provider
 - `claude` CLI installed (`npm i -g @anthropic-ai/claude-code`)
+
+## Provider configuration
+
+Select a provider with `LLM_PROVIDER` when starting the proxy:
+
+```bash
+make run LLM_PROVIDER=chatgpt
+make run LLM_PROVIDER=copilot
+make run LLM_PROVIDER=anthropic
+```
+
+`chatgpt` is the default. The corresponding provider configuration is loaded from
+`<provider>-litellm-config.yml`. The Anthropic provider requires `ANTHROPIC_API_KEY` in the shell
+environment before running the proxy. ChatGPT and GitHub Copilot authenticate through LiteLLM's
+provider-specific flows.
 
 ## 1. Install
 
@@ -22,12 +37,13 @@ This creates the `.venv-litellm` virtualenv with `litellm[proxy]==1.97.0` and
 ## 2. Run the proxy
 
 ```bash
-make run
+make run LLM_PROVIDER=chatgpt
 ```
 
-Serves on `127.0.0.1:4000` by default. Override with `make run HOST=0.0.0.0 PORT=4100`.
+Serves on `127.0.0.1:4000` by default. Override with
+`make run LLM_PROVIDER=copilot HOST=0.0.0.0 PORT=4100`.
 
-On the **first run** you will be prompted for GitHub device auth:
+On the **first GitHub Copilot run** you will be prompted for GitHub device auth:
 
 ```text
 Please visit https://github.com/login/device and enter code XXXX-XXXX
@@ -65,23 +81,19 @@ Any arguments are passed through, e.g. `./claude.sh --help`.
 
 ## Configured models
 
-Defined in `litellm-config.yaml`:
+- `chatgpt-litellm-config.yml` maps the three GPT models and Claude model aliases to ChatGPT.
+- `copilot-litellm-config.yml` exposes the GPT and Claude models available through GitHub Copilot.
+- `anthropic-litellm-config.yml` exposes Claude Opus, Sonnet, and Haiku directly through Anthropic.
 
-- `gpt-5-6-luna`
-- `gpt-5-6-sol`
-- `gpt-5-6-terra`
-- `claude-opus-5`
-- `claude-sonnet-5`
-- `claude-haiku-4-5`
-
-Add a model by appending an entry mapping a `model_name` to a `github_copilot/<model>` target.
+Add a model to the matching provider configuration by appending an entry that maps a `model_name`
+to the appropriate LiteLLM provider target.
 
 ## Make targets
 
 | Target | Description |
 | --- | --- |
 | `install` | Create the virtualenv and generate `.env` keys |
-| `run` | Start the proxy |
+| `run` | Start the proxy (`LLM_PROVIDER=chatgpt`, `copilot`, or `anthropic`) |
 | `keys` | Print the master and salt keys |
 | `health` | Check proxy liveliness |
 | `models` | List models served by the proxy |
